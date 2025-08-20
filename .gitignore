@@ -97,3 +97,8 @@ apps/auth
 !.yarn/sdks
 !.yarn/versions
 i18n.cache
+
+calcom/.yarn/*
+calcom/.pnp.*
+calcom/i18n.cache
+calcom/*

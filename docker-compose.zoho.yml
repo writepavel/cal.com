@@ -1,0 +1,73 @@
+version: '3.8'
+
+# Cal.com with Zoho Calendar integration fixes
+# This uses the pre-built image from GHCR with all fixes included
+# To build locally instead, uncomment the 'build' section and comment out 'image'
+
+services:
+  calcom:
+    image: ghcr.io/writepavel/cal.com:linux-zoho-fix
+    # Uncomment to build locally from root directory:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile.root
+    container_name: calcom-zoho
+    ports:
+      - "3000:3000"
+    environment:
+      # Required Cal.com configuration
+      DATABASE_URL: ${DATABASE_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      CALENDSO_ENCRYPTION_KEY: ${CALENDSO_ENCRYPTION_KEY}
+      NEXT_PUBLIC_WEBAPP_URL: ${NEXT_PUBLIC_WEBAPP_URL:-http://localhost:3000}
+      
+      # Zoho Calendar OAuth credentials - REQUIRED
+      ZOHOCALENDAR_CLIENT_ID: ${ZOHOCALENDAR_CLIENT_ID}
+      ZOHOCALENDAR_CLIENT_SECRET: ${ZOHOCALENDAR_CLIENT_SECRET}
+      
+      # Optional but recommended
+      NEXT_PUBLIC_LICENSE_CONSENT: ${NEXT_PUBLIC_LICENSE_CONSENT:-agree}
+      CALCOM_TELEMETRY_DISABLED: ${CALCOM_TELEMETRY_DISABLED:-1}
+      
+      # Additional calendar integrations (optional)
+      GOOGLE_API_CREDENTIALS: ${GOOGLE_API_CREDENTIALS:-}
+      MS_GRAPH_CLIENT_ID: ${MS_GRAPH_CLIENT_ID:-}
+      MS_GRAPH_CLIENT_SECRET: ${MS_GRAPH_CLIENT_SECRET:-}
+      
+      # Email configuration (optional but recommended)
+      EMAIL_FROM: ${EMAIL_FROM:-notifications@example.com}
+      EMAIL_SERVER_HOST: ${EMAIL_SERVER_HOST:-}
+      EMAIL_SERVER_PORT: ${EMAIL_SERVER_PORT:-587}
+      EMAIL_SERVER_USER: ${EMAIL_SERVER_USER:-}
+      EMAIL_SERVER_PASSWORD: ${EMAIL_SERVER_PASSWORD:-}
+      
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: calcom-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-calcom}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-calcom}
+      POSTGRES_DB: ${POSTGRES_DB:-calcom}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-calcom}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
