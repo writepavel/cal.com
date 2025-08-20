@@ -27,7 +27,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
       "ZohoCalendar.event.ALL",
       "ZohoCalendar.freebusy.READ",
       "AaaServer.profile.READ",
-    ],
+    ].join(" "),
     access_type: "offline",
     state,
     prompt: "consent",
